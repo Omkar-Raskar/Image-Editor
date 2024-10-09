@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Processing</title>
+    <style>
+        .navbar-n .container-nav{
+            width: 100vw;
+            height: 55px;
+            background-color: #1f9cb8;
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        .navbar-n .container-nav a{
+            color: #fff;
+            text-decoration: none;
+            font-size: 22px;
+            font-family: 'Arial', sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar-n">
+        <div class="container-nav">
+          <a href="index.html" class="navbar-brand">Image Filter</a>
+          <a href="green.html" class="navbar-brand">Green Screen Effect</a>
+          <a href="greenVideo.html" class="navbar-brand">Green Screen Effect video</a>
+        </div>
+      </nav>
+    <div class="main" style="height: 1000px; width: 1700; margin-top: 100px;"> <div>
+        <video id="video" width="800" src="videomain.mp4" autoplay muted loop></video>
+        <canvas id="output-canvas" width="800" height="450"></canvas>  
+    </div>
+</div>
+   
+    
+    <script>
+        let video, video2, c_out, ctx_out, c_tmp, ctx_tmp;
+
+        // Initialize the video and canvas
+        function init() {
+            video = document.getElementById("video");
+            c_out = document.getElementById("output-canvas");
+            ctx_out = c_out.getContext("2d");
+           
+            video2 = document.createElement("video");
+            video2.src = "fire.mp4";
+            video2.muted = true;
+            video2.autoplay = true;
+            video2.loop = true;
+
+            // Create a temporary canvas for processing
+            c_tmp = document.createElement("canvas");
+            c_tmp.width = 800;   // Set width and height for the temporary canvas
+            c_tmp.height = 450;
+            ctx_tmp = c_tmp.getContext("2d");
+
+            video.addEventListener("play", computeFrame);  // Add event listener
+        }
+
+        // Function to process each video frame
+        function computeFrame() {
+            if (!video.paused && !video.ended) {
+                // Draw the main video frame to the temporary canvas
+                ctx_tmp.drawImage(video, 0, 0, 800, 450);
+
+                // Get the image data from the temporary canvas
+                let frame = ctx_tmp.getImageData(0, 0, 800, 450);
+
+                // Draw the second video frame to the temporary canvas
+                ctx_tmp.drawImage(video2, 0, 0, 800, 450);
+
+                // Get the image data from the temporary canvas for the second video
+                let frame2 = ctx_tmp.getImageData(0, 0, 800, 450);
+
+                // Loop through each pixel and blend the frames based on color
+                for (let i = 0; i < frame.data.length / 4; i++) {
+                    let r = frame.data[i * 4 + 0];
+                    let g = frame.data[i * 4 + 1]; // Correct index for green
+                    let b = frame.data[i * 4 + 2]; // Correct index for blue
+
+                    // Color blending condition
+                    if (r > 70 && r < 160 && g > 95 && g < 220 && b > 25 && b < 150) {
+                        frame.data[i * 4 + 0] = frame2.data[i * 4 + 0]; // Red
+                        frame.data[i * 4 + 1] = frame2.data[i * 4 + 1]; // Green
+                        frame.data[i * 4 + 2] = frame2.data[i * 4 + 2]; // Blue
+                    }
+                }
+
+                // Draw the image data to the output canvas
+                ctx_out.putImageData(frame, 0, 0);
+
+                // Process the next frame
+                setTimeout(computeFrame, 0);
+            }
+        }
+
+        // Start the script after the page is loaded
+        document.addEventListener("DOMContentLoaded", () => {
+            init();
+        });
+    </script>
+</body>
+</html>
